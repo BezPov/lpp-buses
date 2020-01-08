@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lpp-buses
+spec:
+  selector:
+    matchLabels:
+      app: lpp-buses
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: lpp-buses
+    spec:
+      containers:
+        - image: bezpov/lpp-buses:1.0.1
+          name: lpp-buses-container
+          env:
+            - name: ETCD_SERVER
+              value: "http://etcd-client:2379"
+          ports:
+            - containerPort: 8091
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8091
+            initialDelaySeconds: 20
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8091
+            initialDelaySeconds: 20
+            periodSeconds: 3
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lpp-buses-service
+  namespace: default
+  labels:
+    app: lpp-buses
+spec:
+  ports:
+    - protocol: TCP
+      port: 92
+      targetPort: 8091
+  selector:
+    app: lpp-buses
+  type: NodePort

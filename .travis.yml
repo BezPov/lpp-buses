@@ -1,0 +1,27 @@
+language: generic
+os: linux
+services: docker
+branches:
+  only:
+  - master
+env:
+  global:
+  - PROJECT_NAME=lpp-buses
+  - PROJECT_VERSION=1.0.1
+  - DOCKER_USERNAME=bezpov
+before_install:
+- echo "$GOOGLE_INTEGRATION_PASSWORD" | gpg --batch --yes --passphrase-fd 0 ./config/google-travis-service-account.json.gpg
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+- docker image build -t $PROJECT_NAME:$PROJECT_VERSION .
+- docker image tag $PROJECT_NAME:$PROJECT_VERSION $DOCKER_USERNAME/$PROJECT_NAME:$PROJECT_VERSION
+- docker image push $DOCKER_USERNAME/$PROJECT_NAME
+- gcloud version || true
+- if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export
+  CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+- source /home/travis/google-cloud-sdk/path.bash.inc
+- gcloud version
+- gcloud auth activate-service-account --key-file ./config/google-travis-service-account.json
+- gcloud config set project massive-boulder-263710
+- gcloud container clusters get-credentials lpp --zone us-central1-a --project massive-boulder-263710
+- gcloud components install kubectl
+- kubectl apply -f ./kubernetes/deployment.yaml
