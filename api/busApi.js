@@ -36,6 +36,8 @@ class BusApi {
 
         try {
             const createdBus = await BusModel.create(bus);
+
+            return createdBus;
         } catch (ex) {
             console.log(ex);
         }

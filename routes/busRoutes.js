@@ -1,4 +1,4 @@
-const BusApi = require('../api/bus/busApi');
+const BusApi = require('../api/busApi');
 
 const initRoutes = function (server) {
     server.get('/', async function (req, res, next) {
@@ -34,24 +34,55 @@ const initRoutes = function (server) {
         return next();
     });
 
+    server.post('/', async function (req, res, next) {
+        const createdBus = await BusApi.create(req.body);
+
+        if (createdBus) {
+            res.json({
+                success: true,
+                data: createdBus
+            });
+        } else {
+            res.json(500, {
+                success: false
+            });
+        }
+
+        return next();
+    });
+
     server.get('/:busId', async function (req, res, next) {
         const fetchedBus = await BusApi.findOne({busId: req.params.busId});
 
-        res.json({
-            success: true,
-            data: fetchedBus
-        });
+        if (fetchedBus) {
+            res.json({
+                success: true,
+                data: fetchedBus
+            });
+        } else {
+            res.json(500, {
+                success: false,
+                message: 'Bus not found'
+            });
+        }
 
         return next();
     });
 
     server.get('/routes/:busNumber', async function (req, res, next) {
-        const fetchedBus = await BusApi.findMany({busNumber: req.params.busNumber});
+        const fetchedBuses = await BusApi.findMany({busNumber: req.params.busNumber});
 
-        res.json({
-            success: true,
-            data: fetchedBus
-        });
+        if (fetchedBuses) {
+            res.json({
+                success: true,
+                data: fetchedBuses
+            });
+        } else {
+            res.json(500, {
+                success: false,
+                message: 'Bus routes not found'
+            });
+        }
 
         return next();
     });
