@@ -2,6 +2,8 @@ const restify = require('restify');
 
 const logger = require('./services/logging');
 
+const rabbitMQ = require('./services/rabbitMQ');
+
 const options = {
     name: 'lpp-buses',
     version: process.env.npm_package_version
@@ -28,6 +30,14 @@ const setupCors = function (server) {
 };
 
 setupCors(server);
+
+const { performance } = require('perf_hooks');
+
+server.pre((req, res, next) => {
+    req.startTime = performance.now();
+
+    next();
+});
 
 require('./routes/init')(server);
 

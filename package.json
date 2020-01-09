@@ -1,6 +1,6 @@
 {
   "name": "lpp-buses",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.5.5",
     "axios": "^0.19.0",
     "mongoose": "^5.8.4",
     "node-etcd": "^7.0.0",

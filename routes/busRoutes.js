@@ -1,5 +1,7 @@
 const BusApi = require('../api/busApi');
 
+const sendMetricToRabbitMQ = require('../services/sendMetricToRabbitMQ');
+
 const initRoutes = function (server) {
     server.get('/', async function (req, res, next) {
         const selector = {};
@@ -31,6 +33,8 @@ const initRoutes = function (server) {
             data: fetchedBuses
         });
 
+        sendMetricToRabbitMQ(req);
+
         return next();
     });
 
@@ -47,6 +51,8 @@ const initRoutes = function (server) {
                 success: false
             });
         }
+
+        sendMetricToRabbitMQ(req);
 
         return next();
     });
@@ -66,6 +72,8 @@ const initRoutes = function (server) {
             });
         }
 
+        sendMetricToRabbitMQ(req);
+
         return next();
     });
 
@@ -83,6 +91,8 @@ const initRoutes = function (server) {
                 message: 'Bus routes not found'
             });
         }
+
+        sendMetricToRabbitMQ(req);
 
         return next();
     });
