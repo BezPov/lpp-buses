@@ -9,3 +9,22 @@ Running the Docker image:
 Removing the Docker image:
 
 `docker container remove --force lpp-buses`
+
+GraphQL:
+
+query {
+  buses {
+    busNumber
+    name
+    busId
+  }
+}
+
+
+query {
+  bus(id:"6fbcf6e7-84ec-49cb-97f3-493be60c89f5") {
+    busNumber
+    name
+    busId
+  }
+}
