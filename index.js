@@ -1,17 +1,3 @@
-const { graphqlRestify, graphiqlRestify } = require('apollo-server-restify');
-const BusModel = require('./models/Bus');
-
-const graphQlSchema = require('./models/graphQlSchema');
-
-const resolvers = {
-    Query: {
-        getBus: async (args) => await BusModel.findOne(args).exec()
-    },
-    Mutation: {}
-};
-
-const graphQLOptions = { schema: graphQlSchema, resolvers: resolvers };
-
 const restify = require('restify');
 
 const logger = require('./services/logging');
@@ -54,9 +40,6 @@ server.pre((req, res, next) => {
 });
 
 require('./routes/init')(server);
-
-server.get('/api/graphql/bus/:busId', graphqlRestify(graphQLOptions));
-server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 
 server.listen(8091, () => {
     console.log(`${options.name} ${options.version} listening at ${server.url}`);
