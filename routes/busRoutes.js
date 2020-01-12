@@ -1,6 +1,17 @@
 const BusApi = require('../api/busApi');
+const CircuitBreaker = require('opossum');
 
 const sendMetricToRabbitMQ = require('../services/sendMetricToRabbitMQ');
+
+const breakerOptions = {
+    timeout: 10000, // timeout after 10 seconds
+    errorThresholdPercentage: 50, // if 50% of requests fails, trip breaker
+    resetTimeout: 30000 // renew after 30 seconds
+};
+
+const getManyBreaker = new CircuitBreaker(BusApi.findMany, breakerOptions);
+const getOneBreaker = new CircuitBreaker(BusApi.findOne, breakerOptions);
+const createBreaker = new CircuitBreaker(BusApi.create, breakerOptions);
 
 const initRoutes = function (server) {
     server.get('/', async function (req, res, next) {
@@ -24,14 +35,21 @@ const initRoutes = function (server) {
             if (req.query.limit) options.limit = parseInt(req.query.limit);
         }
 
-        const fetchedBuses = await BusApi.findMany(selector, options);
-
-        res.json({
-            success: true,
-            skip: options.skip,
-            limit: options.limit,
-            data: fetchedBuses
-        });
+        getManyBreaker.fire(selector, options)
+            .then((fetchedBuses) => {
+                res.json({
+                    success: true,
+                    skip: options.skip,
+                    limit: options.limit,
+                    data: fetchedBuses
+                })
+            })
+            .catch(() => {
+                res.json(500, {
+                   success: false,
+                   message: 'Sorry, service is currently unavailable'
+                });
+            });
 
         sendMetricToRabbitMQ(req);
 
@@ -39,18 +57,27 @@ const initRoutes = function (server) {
     });
 
     server.post('/', async function (req, res, next) {
-        const createdBus = await BusApi.create(req.body);
+        //const createdBus = await BusApi.create(req.body);
 
-        if (createdBus) {
-            res.json({
-                success: true,
-                data: createdBus
+        createBreaker.fire(req.body)
+            .then((createdBus) => {
+                if (createdBus) {
+                    res.json({
+                        success: true,
+                        data: createdBus
+                    });
+                } else {
+                    res.json(500, {
+                        success: false
+                    });
+                }
+            })
+            .catch((err) => {
+                res.json(500, {
+                    success: false,
+                    message: 'Sorry, service is currently unavailable'
+                });
             });
-        } else {
-            res.json(500, {
-                success: false
-            });
-        }
 
         sendMetricToRabbitMQ(req);
 
@@ -58,19 +85,26 @@ const initRoutes = function (server) {
     });
 
     server.get('/:busId', async function (req, res, next) {
-        const fetchedBus = await BusApi.findOne({busId: req.params.busId});
-
-        if (fetchedBus) {
-            res.json({
-                success: true,
-                data: fetchedBus
+        getOneBreaker.fire({busId: req.params.busId})
+            .then((fetchedBus) => {
+                if (fetchedBus) {
+                    res.json({
+                        success: true,
+                        data: fetchedBus
+                    });
+                } else {
+                    res.json(500, {
+                        success: false,
+                        message: 'Bus not found'
+                    });
+                }
+            })
+            .catch((err) => {
+                res.json(500, {
+                    success: false,
+                    message: 'Sorry, service is currently unavailable'
+                });
             });
-        } else {
-            res.json(500, {
-                success: false,
-                message: 'Bus not found'
-            });
-        }
 
         sendMetricToRabbitMQ(req);
 
@@ -80,17 +114,28 @@ const initRoutes = function (server) {
     server.get('/routes/:busNumber', async function (req, res, next) {
         const fetchedBuses = await BusApi.findMany({busNumber: req.params.busNumber});
 
-        if (fetchedBuses) {
-            res.json({
-                success: true,
-                data: fetchedBuses
+        const options = {};
+
+        getManyBreaker.fire({busNumber: req.params.busNumber}, options)
+            .then((fetchedBuses) => {
+                if (fetchedBuses) {
+                    res.json({
+                        success: true,
+                        data: fetchedBuses
+                    });
+                } else {
+                    res.json(500, {
+                        success: false,
+                        message: 'Bus routes not found'
+                    });
+                }
+            })
+            .catch((err) => {
+                res.json(500, {
+                    success: false,
+                    message: 'Sorry, service is currently unavailable'
+                });
             });
-        } else {
-            res.json(500, {
-                success: false,
-                message: 'Bus routes not found'
-            });
-        }
 
         sendMetricToRabbitMQ(req);
 

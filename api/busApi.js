@@ -12,9 +12,11 @@ class BusApi {
     static async findMany(selectorObject, options) {
         let operation = BusModel.find(selectorObject);
 
-        if (options.skip) operation = operation.skip(options.skip);
+        if (options) {
+            if (options.skip) operation = operation.skip(options.skip);
 
-        if (options.limit) operation = operation.limit(options.limit);
+            if (options.limit) operation = operation.limit(options.limit);
+        }
 
         return operation;
     }

@@ -40,7 +40,8 @@ module.exports = function (successCallback, errorCallback) {
         });
     };
 
-    const watcher = etcd.watcher("db_url");
+    // TODO: uncomment this
+/*    const watcher = etcd.watcher("db_url");
 
     watcher.on("change", (res) => {
         connectToDatabase(res.node.value);
@@ -54,5 +55,8 @@ module.exports = function (successCallback, errorCallback) {
         }
 
         connectToDatabase(res.node.value);
-    });
+    });*/
+
+    //TODO: remove this
+    connectToDatabase('mongodb+srv://bezoPovi:bezpov123!@lppcluster-hjwow.azure.mongodb.net/test?retryWrites=true&w=majority');
 };
