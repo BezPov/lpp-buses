@@ -13,7 +13,7 @@ spec:
         app: lpp-buses
     spec:
       containers:
-        - image: bezpov/lpp-buses:1.0.3
+        - image: bezpov/lpp-buses:1.0.4
           name: lpp-buses-container
           env:
             - name: ETCD_SERVER

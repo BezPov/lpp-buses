@@ -55,7 +55,7 @@ server.pre((req, res, next) => {
 
 require('./routes/init')(server);
 
-server.get('/graphql/bus/:busId', graphqlRestify(graphQLOptions));
+server.get('/api/graphql/bus/:busId', graphqlRestify(graphQLOptions));
 server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 
 server.listen(8091, () => {
